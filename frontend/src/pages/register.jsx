@@ -2,21 +2,24 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
+  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
+  const [previewPicture, setPreviewPicture] = useState(null);
   const navigate = useNavigate();
 
   const redirectToLogin = () => {
     navigate("/login");
   };
 
-  // Handle password confirmation
+  // Validación de contraseñas
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
     if (confirmPassword && e.target.value !== confirmPassword) {
-      setPasswordError("Passwords do not match");
+      setPasswordError("Las contraseñas no coinciden");
     } else {
       setPasswordError("");
     }
@@ -25,117 +28,135 @@ function Register() {
   const handleConfirmPasswordChange = (e) => {
     setConfirmPassword(e.target.value);
     if (password && e.target.value !== password) {
-      setPasswordError("Passwords do not match");
+      setPasswordError("Las contraseñas no coinciden");
     } else {
       setPasswordError("");
     }
   };
 
-  // Handle profile picture selection
+  // Convertir imagen a Base64
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProfilePicture(URL.createObjectURL(file)); // Preview image
+      setPreviewPicture(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result.split(",")[1]; // quitar encabezado data:image/jpeg;base64,
+        setProfilePicture(base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Prevent form submission due to sandbox restrictions
-  const handleSubmit = (e) => {
+  // Enviar datos al backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
+      setPasswordError("Las contraseñas no coinciden");
       return;
     }
-    // Add form submission logic here (e.g., API call)
-    console.log("Form submitted:", { password, profilePicture });
+
+    try {
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Usuario: username,
+          Nombre: fullName,
+          Contrasena: password,
+          Foto: profilePicture,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Usuario registrado exitosamente");
+        navigate("/login");
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error en registro:", error);
+      alert("Hubo un problema con el servidor");
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      {/* Background image */}
+      {/* Fondo */}
       <img
         src="https://wallpapers.com/images/hd/museum-background-zwem0wdjqomsm6lm.jpg"
         alt="Background"
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
-
-      {/* Dark overlay */}
       <div className="absolute top-0 left-0 w-full h-full bg-black/40"></div>
 
-      {/* Form container */}
+      {/* Formulario */}
       <div className="relative z-10 bg-white/90 p-10 rounded-2xl shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-semibold mb-6 text-center">Registrarse</h1>
-        <div>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username" className="block text-gray-700">
-                Usuario
-            </label>
+            <label htmlFor="username" className="block text-gray-700">Usuario</label>
             <input
               type="text"
               id="username"
-              name="username"
-              autoComplete="off"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="fullName" className="block text-gray-700">
-              Nombre Completo
-            </label>
+            <label htmlFor="fullName" className="block text-gray-700">Nombre Completo</label>
             <input
               type="text"
               id="fullName"
-              name="fullName"
-              autoComplete="off"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="password" className="block text-gray-700">
-              Contraseña
-            </label>
+            <label htmlFor="password" className="block text-gray-700">Contraseña</label>
             <input
               type="password"
               id="password"
-              name="password"
-              autoComplete="off"
-              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
               value={password}
               onChange={handlePasswordChange}
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="confirmPassword" className="block text-gray-700">
-              Confirmar Contraseña
-            </label>
+            <label htmlFor="confirmPassword" className="block text-gray-700">Confirmar Contraseña</label>
             <input
               type="password"
               id="confirmPassword"
-              name="confirmPassword"
-              autoComplete="off"
-              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
               value={confirmPassword}
               onChange={handleConfirmPasswordChange}
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              required
             />
             {passwordError && (
               <p className="text-red-500 text-sm mt-1">{passwordError}</p>
             )}
           </div>
           <div className="mb-4">
-            <label htmlFor="profilePicture" className="block text-gray-700">
-              Foto de Perfil
-            </label>
+            <label htmlFor="profilePicture" className="block text-gray-700">Foto de Perfil</label>
             <input
               type="file"
               id="profilePicture"
-              name="profilePicture"
               accept="image/*"
-              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
               onChange={handleProfilePictureChange}
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              required
             />
-            {profilePicture && (
+            {previewPicture && (
               <img
-                src={profilePicture}
+                src={previewPicture}
                 alt="Profile Preview"
                 className="mt-2 w-24 h-24 object-cover rounded-full"
               />
@@ -144,11 +165,10 @@ function Register() {
           <button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md py-2 px-4 w-full"
-            onClick={handleSubmit}
           >
             Registrarse
           </button>
-        </div>
+        </form>
         <div className="mt-6 text-center">
           <a className="text-blue-500 hover:underline" onClick={redirectToLogin}>
             Ya tienes una cuenta? Inicia sesión

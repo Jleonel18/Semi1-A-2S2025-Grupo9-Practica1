@@ -1,11 +1,23 @@
 require('dotenv').config(); // Carga las variables de entorno desde .env
 const express = require('express'); // Framework para el servidor
+const cors = require('cors'); // Middleware para CORS
 const { Pool } = require('pg'); // Conexión a PostgreSQL
 const crypto = require('crypto'); // Para hashear con MD5
 const jwt = require('jsonwebtoken'); // Para generar tokens JWT
 const AWS = require('aws-sdk'); // Para S3 (mantenido para futura activación)
+
 const app = express();
 const port = 5000;
+
+// ===== Configuración CORS =====
+app.use(cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
+
+// Middleware para parsear cuerpos JSON
+app.use(express.json({ limit: "50mb" }));
 
 // Configura la conexión a PostgreSQL
 const pool = new Pool({
@@ -15,9 +27,6 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
 });
-
-// Middleware para parsear cuerpos JSON
-app.use(express.json());
 
 // Configura AWS S3 (comentado hasta que configures el bucket)
 const s3 = new AWS.S3({
@@ -31,9 +40,9 @@ const hashMD5 = (text) => {
     return crypto.createHash('md5').update(text).digest('hex');
 };
 
-// Endpoint para REGISTRO (/register)
+// ===== Endpoint para REGISTRO (/register) =====
 app.post('/api/register', async (req, res) => {
-const { Usuario, Nombre, Contrasena, Foto } = req.body; // Recibe Foto como base64
+    const { Usuario, Nombre, Contrasena, Foto } = req.body; // Recibe Foto como base64
 
     // Validación: Todos los campos son obligatorios
     if (!Usuario || !Nombre || !Contrasena || !Foto) {
@@ -62,7 +71,7 @@ const { Usuario, Nombre, Contrasena, Foto } = req.body; // Recibe Foto como base
         await s3.upload(params).promise(); // Sube la imagen a S3
         const FotoRuta = key; // Almacena la ruta relativa en la DB
 
-        // Inserta el usuario en la DB (Saldo usa el valor por defecto 0.00)
+        // Inserta el usuario en la DB
         await pool.query(
             'INSERT INTO Usuario (Usuario, Nombre, Contrasena, Foto) VALUES ($1, $2, $3, $4)',
             [Usuario, Nombre, ContrasenaHash, FotoRuta]
@@ -75,39 +84,31 @@ const { Usuario, Nombre, Contrasena, Foto } = req.body; // Recibe Foto como base
     }
 });
 
-// Endpoint para LOGIN (/login)
+// ===== Endpoint para LOGIN (/auth/login) =====
 app.post('/api/auth/login', async (req, res) => {
     const { Usuario, Contrasena } = req.body;
 
-    // Validación: Campos obligatorios
     if (!Usuario || !Contrasena) {
         return res.status(400).json({ error: 'Usuario y Contrasena son obligatorios' });
     }
 
     try {
-        // Busca el usuario
         const userResult = await pool.query('SELECT * FROM Usuario WHERE Usuario = $1', [Usuario]);
         if (userResult.rows.length === 0) {
-            return res.status(401).json({ error: 'Credenciales inválidas 1' });
+            return res.status(401).json({ error: 'Credenciales inválidas' });
         }
 
         const user = userResult.rows[0];
-        console.log(user);
 
-       // Hashea la contraseña ingresada (texto plano) y compárala con el hash almacenado
         const hashedInputPassword = hashMD5(Contrasena);
-        // Log temporal para depuración (puedes eliminarlo después)
-        console.log('Contraseña ingresada (hash):', hashedInputPassword);
-        console.log('Contraseña almacenada:', user.contrasena);
         if (hashedInputPassword !== user.contrasena) {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
 
-        // Genera token JWT
         const token = jwt.sign(
             { Id_Usuario: user.Id_Usuario, Usuario: user.Usuario },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' } // Expira en 1 hora
+            { expiresIn: '1h' }
         );
 
         res.json({ message: 'Login exitoso', token });
@@ -117,7 +118,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// Inicia el servidor
+// ===== Inicia el servidor =====
 app.listen(port, () => {
     console.log(`API corriendo en http://localhost:${port}`);
 });
