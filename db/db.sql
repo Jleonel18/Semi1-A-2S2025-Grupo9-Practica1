@@ -16,9 +16,10 @@ CREATE TABLE Obra(
     Id_Obra SERIAL PRIMARY KEY,
     Titulo VARCHAR(50) NOT NULL,
     Id_Autor INT NOT NULL,
-    Año_Publicacion  DATE NOT NULL,
+    Anio_Publicacion  DATE NOT NULL,
     Disponibilidad BOOLEAN NOT NULL DEFAULT TRUE,
     Precio NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    Imagen VARCHAR(150) NOT NULL,
     Id_Usuario INT NOT NULL,
     FOREIGN KEY (Id_Autor) REFERENCES Autor(Id_Autor),
     FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id_Usuario)

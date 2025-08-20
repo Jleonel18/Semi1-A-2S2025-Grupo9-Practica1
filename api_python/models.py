@@ -21,16 +21,17 @@ class Obra(db.Model):
     __tablename__ = "obra"
     id_obra = db.Column(db.Integer, primary_key=True, index=True)
     titulo = db.Column(db.String(50), nullable=False)
-    id_autor = db.Column(db.Integer, db.ForeignKey("Autor.id_autor"), nullable=False)
-    año_publicacion = db.Column(db.Date, nullable=False)
+    id_autor = db.Column(db.Integer, db.ForeignKey("autor.id_autor"), nullable=False)
+    anio_publicacion = db.Column(db.Date, nullable=False)
     disponibilidad = db.Column(db.Boolean, default=True)
     precio = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
-    id_usuario = db.Column(db.Integer, db.ForeignKey("Usuario.id_usuario"), nullable=False)
+    imagen = db.Column(db.String(150), nullable=False)  # ruta/URL de la imagen en S3
+    id_usuario = db.Column(db.Integer, db.ForeignKey("usuario.id_usuario"), nullable=False)
 
 
 class Adquisicion(db.Model):
     __tablename__ = "adquisicion"
     id_adquisicion = db.Column(db.Integer, primary_key=True, index=True)
-    id_usuario = db.Column(db.Integer, db.ForeignKey("Usuario.id_usuario"), nullable=False)
-    id_obra = db.Column(db.Integer, db.ForeignKey("Obra.id_obra"), nullable=False)
+    id_usuario = db.Column(db.Integer, db.ForeignKey("usuario.id_usuario"), nullable=False)
+    id_obra = db.Column(db.Integer, db.ForeignKey("obra.id_obra"), nullable=False)
     fecha_adquisicion = db.Column(db.Date, nullable=False)

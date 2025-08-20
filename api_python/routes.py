@@ -5,6 +5,7 @@ from auth import hash_password, verify_password, token_required
 from functools import wraps
 from s3 import upload_image_base64
 from decimal import Decimal
+from datetime import datetime as dt
 import datetime
 import jwt
 from sqlalchemy import text
@@ -124,3 +125,50 @@ def aumentar_saldo(current_user):
         "mensaje": f"Saldo aumentado correctamente.",
         "nuevoSaldo": float(current_user.saldo)
     })
+
+@routes.route("/art/create", methods=["POST"])
+@token_required
+def crear_obra(current_user):
+    try:
+        data = request.get_json()
+
+        titulo = data.get("Titulo")
+        id_autor = data.get("Id_Autor")
+        anio_publicacion = data.get("Anio_Publicacion")  # formato yyyy-mm-dd
+        precio = data.get("Precio")
+        imagen_base64 = data.get("Imagen")
+
+        if not all([titulo, id_autor, anio_publicacion, precio, imagen_base64]):
+            return jsonify({"error": "Todos los campos son obligatorios"}), 400
+
+        # Nombre del archivo en S3
+        # Limpiar espacios de titulo
+        titulo_sinespacios = titulo.strip().replace(" ", "_")
+        filename = f"Fotos_Publicadas/{titulo_sinespacios}_{id_autor}_obra.jpg"
+        url_foto = upload_image_base64(imagen_base64, filename)
+
+        if not url_foto:
+            return jsonify({"error": "Error subiendo la imagen"}), 500
+        
+        print(f"Foto subida a S3: {url_foto}")
+
+        # Crear objeto Obra
+        nueva_obra = Obra(
+            titulo=titulo,
+            id_autor=int(id_autor),
+            anio_publicacion=dt.strptime(anio_publicacion, "%Y-%m-%d").date(),
+            precio=Decimal(precio),
+            imagen=filename,
+            id_usuario=int(current_user.id_usuario)
+        )
+
+        db.session.add(nueva_obra)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Obra creada exitosamente"
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
