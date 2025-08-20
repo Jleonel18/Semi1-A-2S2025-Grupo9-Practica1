@@ -16,3 +16,7 @@ José Leonel Lopez Ajvix                  202201211
 ```
 
 ---
+
+## **_Descripción de la arquitectura_**
+
+![imagen](/img/arquitectura.PNG)
