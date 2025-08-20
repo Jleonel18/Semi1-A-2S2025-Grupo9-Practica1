@@ -122,7 +122,7 @@ def aumentar_saldo(current_user):
     db.session.commit()
 
     return jsonify({
-        "mensaje": f"Saldo aumentado correctamente.",
+        "message": f"Saldo aumentado correctamente.",
         "nuevoSaldo": float(current_user.saldo)
     })
 
@@ -168,6 +168,57 @@ def crear_obra(current_user):
         return jsonify({
             "message": "Obra creada exitosamente"
         }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+@routes.route('/art/purchase/<int:id_obra>', methods=['POST'])
+@token_required
+def adquirir_obra(current_user, id_obra):
+    try:
+        # Buscar la obra
+        obra = Obra.query.get(id_obra)
+        if not obra:
+            return jsonify({"error": "La obra no existe"}), 404
+
+        # Validar que la obra esté disponible
+        if not obra.disponibilidad:
+            return jsonify({"error": "La obra ya no está disponible"}), 400
+
+        # Validar que el usuario no sea el creador
+        if obra.id_usuario == current_user.id_usuario:
+            return jsonify({"error": "No puedes adquirir una obra que tú mismo creaste"}), 400
+
+        # Validar que el usuario tenga saldo suficiente
+        if current_user.saldo < obra.precio:
+            return jsonify({"error": "Saldo insuficiente"}), 400
+
+        # Buscar al creador de la obra
+        creador = Usuario.query.get(obra.id_usuario)
+        if not creador:
+            return jsonify({"error": "El creador de la obra no existe"}), 404
+
+        # --- Realizar transacciones ---
+        # Restar saldo al comprador
+        current_user.saldo -= obra.precio
+
+        # Aumentar saldo al creador
+        creador.saldo += obra.precio
+
+        # Cambiar disponibilidad de la obra
+        obra.disponibilidad = False
+
+        nueva_adquisicion = Adquisicion(
+            id_usuario=current_user.id_usuario,
+            id_obra=obra.id_obra,
+            fecha_adquisicion=dt.utcnow().date()
+        )
+        db.session.add(nueva_adquisicion)
+
+        db.session.commit()
+
+        return jsonify({"message": "Obra adquirida exitosamente", "saldo_restante": float(current_user.saldo)}), 200
 
     except Exception as e:
         db.session.rollback()
