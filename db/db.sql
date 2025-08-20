@@ -24,11 +24,45 @@ CREATE TABLE Obra(
     FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id_Usuario)
 );
 
-CREATE TABLE Aquisicion(
-    Id_Aquisicion SERIAL PRIMARY KEY,
+CREATE TABLE Adquisicion(
+    Id_Adquisicion SERIAL PRIMARY KEY,
     Id_Usuario INT NOT NULL,
     Id_Obra INT NOT NULL,
     Fecha_Adquisicion  DATE NOT NULL,
     FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id_Usuario),
     FOREIGN KEY (Id_Obra)  REFERENCES Obra(Id_Obra)
 );
+
+-- AUTORES
+
+INSERT INTO Autor (Nombre) VALUES
+('Leonardo da Vinci'),
+('Vincent van Gogh'),
+('Pablo Picasso'),
+('Claude Monet'),
+('Michelangelo Buonarroti'),
+('Rembrandt van Rijn'),
+('Johannes Vermeer'),
+('Gustav Klimt'),
+('Frida Kahlo'),
+('Diego Rivera'),
+('Sandro Botticelli'),
+('Raphael Sanzio'),
+('Caravaggio'),
+('Edvard Munch'),
+('Henri Matisse'),
+('Wassily Kandinsky'),
+('Paul Cézanne'),
+('Georgia O''Keeffe'),
+('Jackson Pollock'),
+('Andy Warhol'),
+('Jean-Michel Basquiat'),
+('Mary Cassatt'),
+('Édouard Manet'),
+('Pierre-Auguste Renoir'),
+('Mark Rothko'),
+('Banksy'),
+('Yayoi Kusama'),
+('Kehinde Wiley'),
+('Cindy Sherman'),
+('Damien Hirst');

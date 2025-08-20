@@ -1,11 +1,13 @@
 from flask import Blueprint, request, jsonify, current_app
 from database import db
-from models import Usuario
-from auth import hash_password, verify_password
+from models import Usuario, Adquisicion, Obra, Autor
+from auth import hash_password, verify_password, token_required
 from functools import wraps
 from s3 import upload_image_base64
+from decimal import Decimal
 import datetime
 import jwt
+from sqlalchemy import text
 
 
 routes = Blueprint("routes", __name__)
@@ -71,27 +73,54 @@ def login():
 
     return jsonify({"message": "Login exitoso", "token": token})
 
+@routes.route("/user", methods=["GET"])
+@token_required
+def obtener_perfil(current_user):
+    # Datos básicos del usuario
+    perfil = {
+        "nombre": current_user.nombre,
+        "usuario": current_user.usuario,
+        "foto": current_user.foto,
+        "saldo": float(current_user.saldo),
+        "obras": []
+    }
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        # Buscar el token en el header Authorization
-        if "Authorization" in request.headers:
-            auth_header = request.headers["Authorization"]
-            if auth_header.startswith("Bearer "):
-                token = auth_header.split(" ")[1]
+    # Traer las adquisiciones del usuario
+    adquisiciones = db.session.query(Adquisicion).filter_by(id_usuario=current_user.id_usuario).all()
 
-        if not token:
-            return jsonify({"error": "Token faltante"}), 401
+    for aq in adquisiciones:
+        obra = db.session.query(Obra).filter_by(id_obra=aq.id_obra).first()
+        if obra:
+            autor = db.session.query(Autor).filter_by(id_autor=obra.id_autor).first()
+            perfil["obras"].append({
+                "id": obra.id_obra,
+                "titulo": obra.titulo,
+                "autor": autor.nombre if autor else "",
+                "publicacion": obra.año_publicacion.strftime("%Y-%m-%d"),
+                "precio": float(obra.precio)
+            })
 
-        try:
-            data = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
-            current_user = Usuario.query.get(data["id_usuario"])
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Token expirado"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Token inválido"}), 401
+    return jsonify(perfil)
 
-        return f(current_user, *args, **kwargs)
-    return decorated
+@routes.route("/user/balance", methods=["POST"])
+@token_required
+def aumentar_saldo(current_user):
+    data = request.get_json()
+    if not data or "monto" not in data:
+        return jsonify({"error": "Debe enviar el monto a agregar"}), 400
+
+    try:
+        monto = Decimal(str(data["monto"]))
+        if monto <= 0:
+            return jsonify({"error": "El monto debe ser mayor a cero"}), 400
+    except ValueError:
+        return jsonify({"error": "Monto inválido"}), 400
+
+    # Actualizar saldo
+    current_user.saldo += monto
+    db.session.commit()
+
+    return jsonify({
+        "mensaje": f"Saldo aumentado correctamente.",
+        "nuevoSaldo": float(current_user.saldo)
+    })
