@@ -1,0 +1,30 @@
+services:
+  myDB:
+    image: postgres:15.3
+    container_name: semi1
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=grupo9
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=practica_1
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+  
+  pdAdmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: always
+    depends_on:
+      - myDB
+    ports:
+      - 8080:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@google.com
+      - PGADMIN_DEFAULT_PASSWORD=1234
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+      - ./pgadmin:/certs/server.cert
+      - ./pgadmin:/certs/server.key
+      - ./pgadmin:/pgadmin4/servers.json
