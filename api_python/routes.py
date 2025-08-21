@@ -97,8 +97,9 @@ def obtener_perfil(current_user):
                 "id": obra.id_obra,
                 "titulo": obra.titulo,
                 "autor": autor.nombre if autor else "",
-                "publicacion": obra.año_publicacion.strftime("%Y-%m-%d"),
-                "precio": float(obra.precio)
+                "publicacion": obra.anio_publicacion.strftime("%Y-%m-%d"),
+                "precio": float(obra.precio),
+                "fecha_adquisicion": aq.fecha_adquisicion.strftime("%Y-%m-%d")
             })
 
     return jsonify(perfil)
@@ -222,4 +223,69 @@ def adquirir_obra(current_user, id_obra):
 
     except Exception as e:
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+@routes.route("/gallery", methods=["GET"])
+@token_required
+def obtener_obras_disponibles(current_user):
+    try:
+        # Obtener todas las obras disponibles excepto las del usuario logueado
+        obras = (
+            db.session.query(Obra, Autor, Usuario)
+            .join(Autor, Obra.id_autor == Autor.id_autor)
+            .join(Usuario, Obra.id_usuario == Usuario.id_usuario)
+            .filter(Obra.disponibilidad == True)
+            .filter(Obra.id_usuario != current_user.id_usuario)
+            .all()
+        )
+
+        resultados = []
+        for obra, autor, usuario in obras:
+            resultados.append({
+                "id_obra": obra.id_obra,
+                "titulo": obra.titulo,
+                "autor": autor.nombre,   # Asumiendo que en Autor tienes el campo Nombre
+                "anio_publicacion": obra.anio_publicacion.strftime("%Y-%m-%d"),
+                "precio": float(obra.precio),
+                "imagen": obra.imagen,
+                "creador": usuario.usuario  # Asumiendo que Usuario tiene username o nombre
+            })
+
+        return jsonify({ "obras": resultados}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@routes.route("/gallery/<int:id_obra>", methods=["GET"])
+@token_required
+def obtener_obra(current_user, id_obra):
+    try:
+        # Buscar la obra con join a Autor y Usuario
+        obra = (
+            db.session.query(Obra, Autor, Usuario)
+            .join(Autor, Obra.id_autor == Autor.id_autor)
+            .join(Usuario, Obra.id_usuario == Usuario.id_usuario)
+            .filter(Obra.id_obra == id_obra)
+            .first()
+        )
+
+        if not obra:
+            return jsonify({"error": "La obra no existe"}), 404
+
+        obra_data, autor, usuario = obra
+
+        resultado = {
+            "id_obra": obra_data.id_obra,
+            "titulo": obra_data.titulo,
+            "autor": autor.nombre,
+            "anio_publicacion": obra_data.anio_publicacion.strftime("%Y-%m-%d"),
+            "precio": float(obra_data.precio),
+            "imagen": obra_data.imagen,
+            "disponibilidad": obra_data.disponibilidad,
+            "creador": usuario.usuario
+        }
+
+        return jsonify(resultado), 200
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
