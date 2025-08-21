@@ -289,3 +289,56 @@ def obtener_obra(current_user, id_obra):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@routes.route("/user", methods=["PUT"])
+@token_required
+def editar_perfil(current_user):
+    try:
+        data = request.get_json()
+        nuevo_usuario = data.get("Usuario")
+        nuevo_nombre = data.get("Nombre")
+        nueva_foto_base64 = data.get("Foto")
+        password = data.get("Contrasena")
+
+        # Validar contraseña (MD5)
+        import hashlib
+        if hashlib.md5(password.encode()).hexdigest() != current_user.contrasena:
+            return jsonify({"error": "Contraseña incorrecta"}), 401
+
+        # Validar que el nuevo usuario no exista ya
+        if nuevo_usuario and nuevo_usuario != current_user.usuario:
+            existente = Usuario.query.filter_by(usuario=nuevo_usuario).first()
+            if existente:
+                return jsonify({"error": "El nombre de usuario ya está en uso"}), 400
+            current_user.usuario = nuevo_usuario
+
+        # Cambiar nombre si se envió
+        if nuevo_nombre:
+            current_user.nombre = nuevo_nombre
+
+        # Cambiar foto si se envió
+        if nueva_foto_base64:
+            filename = f"Fotos_Perfil/{current_user.usuario}_perfil.jpg"
+            url_foto = upload_image_base64(nueva_foto_base64, filename)
+
+            if not url_foto:
+                return jsonify({"error": "Error subiendo la imagen"}), 500
+            
+            print(f"Foto actualizada en S3: {url_foto}")
+            current_user.foto = filename
+
+        db.session.commit()
+
+        return jsonify({
+            "mensaje": "Perfil actualizado exitosamente",
+            "usuario": {
+                "usuario": current_user.usuario,
+                "nombre": current_user.nombre,
+                "foto": current_user.foto,
+                "saldo": float(current_user.saldo)
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
