@@ -1,14 +1,25 @@
-require('dotenv').config(); // Carga las variables de entorno desde .env
-const express = require('express'); // Framework para el servidor
-const { Pool } = require('pg'); // Conexión a PostgreSQL
-const crypto = require('crypto'); // Para hashear con MD5
-const jwt = require('jsonwebtoken'); // Para generar y verificar tokens JWT
-const AWS = require('aws-sdk'); // Para S3
+require('dotenv').config(); // Carga variables de entorno
+const express = require('express');
+const cors = require('cors'); // Para habilitar CORS
+const { Pool } = require('pg');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const AWS = require('aws-sdk');
+
 const app = express();
 const port = 5000;
 
+// ===== CORS =====
+app.use(cors({
+    origin: "http://localhost:5173", // URL de tu frontend Vite
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 
-// Configura la conexión a PostgreSQL
+// Middleware para parsear JSON con límite aumentado a 10MB
+app.use(express.json({ limit: '10mb' }));
+
+// Configura PostgreSQL
 const pool = new Pool({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -17,8 +28,6 @@ const pool = new Pool({
     database: process.env.DB_NAME,
 });
 
-// Middleware para parsear cuerpos JSON con límite aumentado a 10MB
-app.use(express.json({ limit: '10mb' }));
 
 // Configura AWS S3 (comentado hasta que configures el bucket)
 const s3 = new AWS.S3({
@@ -61,39 +70,24 @@ const verifyToken = (req, res, next) => {
 
 // ===== Endpoint para REGISTRO (/register) =====
 app.post('/api/register', async (req, res) => {
-    const { Usuario, Nombre, Contrasena, Foto } = req.body; // Recibe Foto como base64
+    const { Usuario, Nombre, Contrasena, Foto } = req.body;
 
-    // Validación: Todos los campos son obligatorios
     if (!Usuario || !Nombre || !Contrasena || !Foto) {
-        return res.status(400).json({ error: 'Usuario, Nombre, Contrasena y Foto son obligatorios' });
+        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
 
     try {
-        // Verifica si el usuario ya existe
         const checkUser = await pool.query('SELECT COUNT(*) FROM Usuario WHERE Usuario = $1', [Usuario]);
-        if (checkUser.rows[0].count > 0) {
-            return res.status(409).json({ error: 'El nombre de usuario ya existe' });
-        }
+        if (checkUser.rows[0].count > 0) return res.status(409).json({ error: 'El usuario ya existe' });
 
-        // Hashea la contraseña con MD5
         const ContrasenaHash = hashMD5(Contrasena);
+        const buffer = Buffer.from(Foto, 'base64');
+        const key = `Fotos_Perfil/${Usuario}_perfil.jpg`;
+        await s3.upload({ Bucket: process.env.AWS_BUCKET_NAME, Key: key, Body: buffer, ContentType: 'image/jpeg' }).promise();
 
-        // Sube la imagen a S3
-        const buffer = Buffer.from(Foto, 'base64'); // Convierte base64 a buffer
-        const key = `Fotos_Perfil/${Usuario}_perfil.jpg`; // Ruta en S3: Fotos_Perfil/{Usuario}_perfil.jpg
-        const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: key,
-            Body: buffer,
-            ContentType: 'image/jpeg'
-        };
-        await s3.upload(params).promise(); // Sube la imagen a S3
-        const FotoRuta = key; // Almacena la ruta relativa en la DB
-
-        // Inserta el usuario en la DB
         await pool.query(
             'INSERT INTO Usuario (Usuario, Nombre, Contrasena, Foto) VALUES ($1, $2, $3, $4)',
-            [Usuario, Nombre, ContrasenaHash, FotoRuta]
+            [Usuario, Nombre, ContrasenaHash, key]
         );
 
         res.status(201).json({ message: 'Usuario registrado exitosamente' });
