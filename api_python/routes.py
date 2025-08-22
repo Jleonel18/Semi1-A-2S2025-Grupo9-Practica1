@@ -235,7 +235,7 @@ def obtener_obras_disponibles(current_user):
             .join(Autor, Obra.id_autor == Autor.id_autor)
             .join(Usuario, Obra.id_usuario == Usuario.id_usuario)
             .filter(Obra.disponibilidad == True)
-            .filter(Obra.id_usuario != current_user.id_usuario)
+            # .filter(Obra.id_usuario != current_user.id_usuario)  # Uncomment if needed
             .all()
         )
 
@@ -244,17 +244,21 @@ def obtener_obras_disponibles(current_user):
             resultados.append({
                 "id_obra": obra.id_obra,
                 "titulo": obra.titulo,
-                "autor": autor.nombre,   # Asumiendo que en Autor tienes el campo Nombre
-                "anio_publicacion": obra.anio_publicacion.strftime("%Y-%m-%d"),
-                "precio": float(obra.precio),
+                "autor": autor.nombre,  # Asumiendo que Autor tiene el campo nombre
+                "anio_publicacion": obra.anio_publicacion.strftime("%Y-%m-%d") if obra.anio_publicacion else None,
+                "precio": float(obra.precio) if obra.precio is not None else None,
                 "imagen": obra.imagen,
-                "creador": usuario.usuario  # Asumiendo que Usuario tiene username o nombre
+                "creador": usuario.usuario,  # Asumiendo que Usuario tiene el campo usuario
+                "disponibilidad": obra.disponibilidad in (True, 't', 1),  # Asegura booleano
+                "id_usuario": obra.id_usuario
             })
 
-        return jsonify({ "obras": resultados}), 200
+        return jsonify({"obras": resultados}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error en /gallery: {str(e)}")  # Log del error para depuración
+        return jsonify({"error": "Error en el servidor"}), 500
+    
 
 @routes.route("/gallery/<int:id_obra>", methods=["GET"])
 @token_required
@@ -290,7 +294,7 @@ def obtener_obra(current_user, id_obra):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@routes.route("/user", methods=["PUT"])
+@routes.route("/profile", methods=["PUT"])
 @token_required
 def editar_perfil(current_user):
     try:
@@ -341,4 +345,33 @@ def editar_perfil(current_user):
 
     except Exception as e:
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+@routes.route('/my-art', methods=['GET'])
+@token_required
+def obtener_mis_obras(current_user):
+    try:
+        # Obtener todas las obras creadas por el usuario logeado
+        obras = db.session.query(Obra, Autor, Usuario)\
+            .join(Autor, Obra.id_autor == Autor.id_autor)\
+            .join(Usuario, Obra.id_usuario == Usuario.id_usuario)\
+            .filter(Obra.id_usuario == current_user.id_usuario)\
+            .all()
+
+        resultado = []
+        for obra, autor, usuario in obras:
+            resultado.append({
+                "id_obra": obra.id_obra,
+                "titulo": obra.titulo,
+                "autor": autor.nombre,  # suponiendo que en Autor el campo es Nombre
+                "anio_publicacion": obra.anio_publicacion.strftime("%Y-%m-%d"),
+                "disponibilidad": obra.disponibilidad,
+                "precio": float(obra.precio),
+                "imagen": obra.imagen,
+                "creador": usuario.usuario  # nombre del usuario que creó la obra
+            })
+
+        return jsonify({"obras": resultado}), 200
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500

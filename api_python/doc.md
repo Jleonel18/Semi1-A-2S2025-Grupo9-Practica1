@@ -8,8 +8,14 @@ python -m venv venv
 
 2. Activamos el entorno
 
+Linux:
 ```bash
 venv\Scripts\activate
+```
+
+MacOS:
+```bash
+source env/bin/activate
 ```
 
 3. Instalamos dependencias dentro del entorno

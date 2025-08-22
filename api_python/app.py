@@ -3,11 +3,14 @@ from database import db
 from routes import routes
 from dotenv import load_dotenv
 import os
+from flask_cors import CORS
 
 # Cargar .env
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
+
 
 # Configuración PostgreSQL (cambia usuario/contraseña/db a los tuyos)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
