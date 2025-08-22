@@ -408,34 +408,65 @@ app.post('/api/art/purchase/:Id_Obra', verifyToken, async (req, res) => {
 
 
 app.get('/api/gallery', verifyToken, async (req, res) => {
-    const userId = req.user.Id_Usuario;
-
     try {
-        // Obtiene todas las obras disponibles que no pertenecen al usuario logeado
-        const obrasResult = await pool.query(
-            `SELECT 
-                Obra.Id_Obra AS id_obra,
-                Autor.Nombre AS autor,
-                Usuario.Usuario AS creador,
-                Obra.Anio_Publicacion AS anio_publicacion,
-                Obra.Imagen AS imagen,
-                Obra.Titulo AS titulo,
-                Obra.Precio AS precio
-             FROM Obra
-             JOIN Autor ON Obra.Id_Autor = Autor.Id_Autor
-             JOIN Usuario ON Obra.Id_Usuario = Usuario.Id_Usuario
-             WHERE Obra.Disponibilidad = TRUE AND Obra.Id_Usuario != $1`,
-            [userId]
-        );
-
-        const obras = obrasResult.rows;
-
-        res.json({ obras });
+      const obrasResult = await pool.query(
+        `SELECT 
+            obra.id_obra,
+            autor.nombre AS autor,
+            usuario.usuario AS creador,
+            obra.anio_publicacion,
+            obra.imagen,
+            obra.titulo,
+            obra.precio,
+            obra.disponibilidad,
+            obra.id_usuario
+         FROM obra
+         JOIN autor ON obra.id_autor = autor.id_autor
+         JOIN usuario ON obra.id_usuario = usuario.id_usuario`
+      );
+  
+      const obras = obrasResult.rows.map((obra) => ({
+        ...obra,
+        disponibilidad: obra.disponibilidad === true || obra.disponibilidad === 't' // asegura boolean
+      }));
+  
+      res.json({ obras });
     } catch (error) {
-        console.error('Error en /gallery:', error);
-        res.status(500).json({ error: 'Error en el servidor' });
+      console.error('Error en /gallery:', error);
+      res.status(500).json({ error: 'Error en el servidor' });
     }
-});
+  });
+  
+
+app.get('/api/my-art', verifyToken, async (req, res) => {
+    const userId = req.user.Id_Usuario;
+  
+    try {
+      const obrasResult = await pool.query(
+        `SELECT 
+            obra.id_obra,
+            autor.nombre AS autor,
+            usuario.usuario AS creador,
+            obra.anio_publicacion,
+            obra.imagen,
+            obra.titulo,
+            obra.precio,
+            obra.disponibilidad
+         FROM obra
+         JOIN autor ON obra.id_autor = autor.id_autor
+         JOIN usuario ON obra.id_usuario = usuario.id_usuario
+         WHERE obra.id_usuario = $1`,
+        [userId]
+      );
+      
+  
+      res.json({ obras: obrasResult.rows });
+    } catch (error) {
+      console.error('Error en /my-art:', error);
+      res.status(500).json({ error: 'Error en el servidor' });
+    }
+  });
+  
 
 
 // Nuevo Endpoint para OBTENER OBRA POR ID (/art/:Id_Obra)

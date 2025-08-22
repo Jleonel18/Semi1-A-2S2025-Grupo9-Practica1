@@ -28,11 +28,12 @@ function Login() {
 
       if (res.ok) {
         setMessage("✅ Inicio de sesión correcto");
-        // Guarda el token si quieres usarlo en la sesión
-        // localStorage.setItem("token", data.token);
+        // Guarda el token en localStorage
+        localStorage.setItem("token", data.token); // Asegúrate de que la API devuelva un token
+        // Redirige inmediatamente (sin setTimeout por ahora para testing)
         setTimeout(() => {
-          navigate("/dashboard"); // redirige a tu dashboard
-        }, 1500);
+          navigate("/dashboard");
+        }, 1500); // Mantiene el delay de 1.5 segundos por diseño
       } else {
         setMessage("❌ " + (data.error || "Credenciales incorrectas"));
       }
