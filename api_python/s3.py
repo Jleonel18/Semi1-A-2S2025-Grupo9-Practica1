@@ -13,6 +13,7 @@ s3_client = boto3.client(
 
 BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
 
+
 def upload_image_base64(base64_string: str, filename: str) -> str:
     """
     Sube una imagen en base64 a S3 y devuelve la URL o path
@@ -23,7 +24,8 @@ def upload_image_base64(base64_string: str, filename: str) -> str:
 
         content_type = "image/jpeg"  # 'image/jpeg' o 'image/png'
         # Subir al bucket
-        s3_client.put_object(Bucket=BUCKET_NAME, Key=filename, Body=image_bytes, ContentType=content_type)
+        s3_client.put_object(Bucket=BUCKET_NAME, Key=filename,
+                             Body=image_bytes, ContentType=content_type)
         # Retornar la ruta pública
         url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{filename}"
         return url

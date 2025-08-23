@@ -9,9 +9,12 @@ from datetime import datetime as dt
 import datetime
 import jwt
 from sqlalchemy import text
+import os
+BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
 
 
 routes = Blueprint("routes", __name__)
+
 
 @routes.route("/register", methods=["POST"])
 def register():
@@ -28,14 +31,14 @@ def register():
     # Validar si ya existe
     if Usuario.query.filter_by(usuario=username).first():
         return jsonify({"error": "El nombre de usuario ya existe"}), 400
-    
+
     # Nombre del archivo en S3
     filename = f"Fotos_Perfil/{username}_perfil.jpg"
     url_foto = upload_image_base64(profile_pic, filename)
 
     if not url_foto:
         return jsonify({"error": "Error subiendo la imagen"}), 500
-    
+
     print(f"Foto subida a S3: {url_foto}")
 
     # Crear usuario
@@ -70,29 +73,37 @@ def login():
         "Usuario": user.usuario,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # expira en 2h
     }
-    token = jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
+    token = jwt.encode(
+        payload, current_app.config["SECRET_KEY"], algorithm="HS256")
 
     return jsonify({"message": "Login exitoso", "token": token})
+
 
 @routes.route("/user", methods=["GET"])
 @token_required
 def obtener_perfil(current_user):
+
+    # URL completa de la foto
+    foto_url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{current_user.foto}?t={int(datetime.datetime.utcnow().timestamp())}"
+
     # Datos básicos del usuario
     perfil = {
         "nombre": current_user.nombre,
         "usuario": current_user.usuario,
-        "foto": current_user.foto,
+        "foto": foto_url,
         "saldo": float(current_user.saldo),
         "obras": []
     }
 
     # Traer las adquisiciones del usuario
-    adquisiciones = db.session.query(Adquisicion).filter_by(id_usuario=current_user.id_usuario).all()
+    adquisiciones = db.session.query(Adquisicion).filter_by(
+        id_usuario=current_user.id_usuario).all()
 
     for aq in adquisiciones:
         obra = db.session.query(Obra).filter_by(id_obra=aq.id_obra).first()
         if obra:
-            autor = db.session.query(Autor).filter_by(id_autor=obra.id_autor).first()
+            autor = db.session.query(Autor).filter_by(
+                id_autor=obra.id_autor).first()
             perfil["obras"].append({
                 "id": obra.id_obra,
                 "titulo": obra.titulo,
@@ -103,6 +114,7 @@ def obtener_perfil(current_user):
             })
 
     return jsonify(perfil)
+
 
 @routes.route("/user/balance", methods=["POST"])
 @token_required
@@ -127,6 +139,7 @@ def aumentar_saldo(current_user):
         "nuevoSaldo": float(current_user.saldo)
     })
 
+
 @routes.route("/art/create", methods=["POST"])
 @token_required
 def crear_obra(current_user):
@@ -150,7 +163,7 @@ def crear_obra(current_user):
 
         if not url_foto:
             return jsonify({"error": "Error subiendo la imagen"}), 500
-        
+
         print(f"Foto subida a S3: {url_foto}")
 
         # Crear objeto Obra
@@ -173,7 +186,8 @@ def crear_obra(current_user):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-    
+
+
 @routes.route('/art/purchase/<int:id_obra>', methods=['POST'])
 @token_required
 def adquirir_obra(current_user, id_obra):
@@ -224,7 +238,8 @@ def adquirir_obra(current_user, id_obra):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-    
+
+
 @routes.route("/gallery", methods=["GET"])
 @token_required
 def obtener_obras_disponibles(current_user):
@@ -249,7 +264,8 @@ def obtener_obras_disponibles(current_user):
                 "precio": float(obra.precio) if obra.precio is not None else None,
                 "imagen": obra.imagen,
                 "creador": usuario.usuario,  # Asumiendo que Usuario tiene el campo usuario
-                "disponibilidad": obra.disponibilidad in (True, 't', 1),  # Asegura booleano
+                # Asegura booleano
+                "disponibilidad": obra.disponibilidad in (True, 't', 1),
                 "id_usuario": obra.id_usuario
             })
 
@@ -258,7 +274,7 @@ def obtener_obras_disponibles(current_user):
     except Exception as e:
         print(f"Error en /gallery: {str(e)}")  # Log del error para depuración
         return jsonify({"error": "Error en el servidor"}), 500
-    
+
 
 @routes.route("/gallery/<int:id_obra>", methods=["GET"])
 @token_required
@@ -293,7 +309,8 @@ def obtener_obra(current_user, id_obra):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @routes.route("/profile", methods=["PUT"])
 @token_required
 def editar_perfil(current_user):
@@ -327,9 +344,11 @@ def editar_perfil(current_user):
 
             if not url_foto:
                 return jsonify({"error": "Error subiendo la imagen"}), 500
-            
+
             print(f"Foto actualizada en S3: {url_foto}")
-            current_user.foto = filename
+            # current_user.foto = filename
+            current_user.foto = filename  # guardamos el nombre en la DB
+            foto_url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{current_user.foto}?t={int(datetime.datetime.utcnow().timestamp())}"
 
         db.session.commit()
 
@@ -338,7 +357,7 @@ def editar_perfil(current_user):
             "usuario": {
                 "usuario": current_user.usuario,
                 "nombre": current_user.nombre,
-                "foto": current_user.foto,
+                "foto": foto_url,
                 "saldo": float(current_user.saldo)
             }
         }), 200
@@ -346,7 +365,8 @@ def editar_perfil(current_user):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-    
+
+
 @routes.route('/my-art', methods=['GET'])
 @token_required
 def obtener_mis_obras(current_user):
