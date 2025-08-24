@@ -615,6 +615,17 @@ app.put('/api/profile', verifyToken, async (req, res) => {
     }
 });
 
+// Endpoint para OBTENER AUTORES (/api/authors)
+app.get('/api/authors', verifyToken, async (req, res) => {
+    try {
+        const authorsResult = await pool.query('SELECT * FROM Autor');
+        res.json({ authors: authorsResult.rows });
+    } catch (error) {
+        console.error('Error en /api/authors:', error);
+        res.status(500).json({ error: 'Error en el servidor' });
+    }
+});
+
 // ===== Inicia el servidor =====
 app.listen(port, () => {
     console.log(`API corriendo en http://localhost:${port}`);
