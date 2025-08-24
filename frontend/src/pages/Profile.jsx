@@ -56,7 +56,8 @@ function Profile() {
       const data = await res.json();
       if (res.ok) {
         toast.success("Saldo actualizado");
-        setUser({ ...user, saldo: data.nuevoSaldo });
+        // setUser({ ...user, saldo: data.nuevoSaldo });
+        setUser({ ...user, saldo: Number(data.nuevoSaldo) });
         setAmount("");
       } else {
         toast.error(data.error || "Error al actualizar saldo");
@@ -103,7 +104,11 @@ function Profile() {
           <div className="text-center md:text-left">
             <h2 className="text-3xl font-bold text-blue-700">{user.nombre}</h2>
             <p className="text-gray-700 mt-1">Usuario: {user.usuario}</p>
-            <p className="text-gray-700 mt-1">Saldo: ${user.saldo.toFixed(2)}</p>
+            <p className="text-gray-700 mt-1">
+              Saldo: ${user.saldo !== undefined && user.saldo !== null ? Number(user.saldo).toFixed(2) : "0.00"}
+            </p>
+
+            {/* <p className="text-gray-700 mt-1">Saldo: ${user.saldo.toFixed(2)}</p> */}
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
               <input
                 type="number"
