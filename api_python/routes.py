@@ -395,3 +395,18 @@ def obtener_mis_obras(current_user):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+@routes.route("/authors", methods=["GET"])
+@token_required
+def obtener_autores(current_user):
+    try:
+        authors = Autor.query.all()
+        resultados = [{
+            "id_autor": autor.id_autor,
+            "nombre": autor.nombre
+        } for autor in authors]
+        return jsonify({"authors": resultados}), 200
+    except Exception as e:
+        print(f"Error en /authors: {str(e)}")
+        return jsonify({"error": "Error en el servidor"}), 500
