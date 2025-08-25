@@ -159,7 +159,8 @@ app.get('/api/user', verifyToken, async (req, res) => {
                 Autor.Nombre AS autor,
                 Obra.Anio_Publicacion AS publicacion,
                 Adquisicion.Fecha_Adquisicion AS fecha_adquisicion,
-                Obra.Precio AS precio
+                Obra.Precio AS precio,
+                Obra.Imagen AS imagen
              FROM Adquisicion
              JOIN Obra ON Adquisicion.Id_Obra = Obra.Id_Obra
              JOIN Autor ON Obra.Id_Autor = Autor.Id_Autor
@@ -174,7 +175,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
             nombre: userData.nombre,
             usuario: userData.usuario,
             saldo: userData.saldo,
-            foto: userData.foto,
+            foto: "https://practica1-grupo9-imagenes.s3.us-east-2.amazonaws.com/" + userData.foto,
             obras: obras
         };
 
@@ -190,14 +191,15 @@ app.get('/api/user', verifyToken, async (req, res) => {
 app.post('/api/user/balance', verifyToken, async (req, res) => {
     const userId = req.user.Id_Usuario;
     console.log('Id_Usuario del token:', userId);
-    const { monto } = req.body;
-
-    // Validación: monto debe ser un número positivo
-    if (!monto || typeof monto !== 'number' || monto <= 0) {
-        return res.status(400).json({ error: 'Monto debe ser un número positivo' });
-    }
-
+    
     try {
+
+        const monto = parseFloat(req.body.monto);
+
+        // Validación: monto debe ser un número positivo
+        if (!monto || typeof monto !== 'number' || monto <= 0) {
+            return res.status(400).json({ error: 'Monto debe ser un número positivo' });
+        }
         // Verifica si el usuario existe
         const userResult = await pool.query('SELECT * FROM Usuario WHERE Id_Usuario = $1', [userId]);
         if (userResult.rows.length === 0) {

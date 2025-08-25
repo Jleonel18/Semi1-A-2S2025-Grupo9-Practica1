@@ -8,6 +8,7 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState("");
+  const url_bucket = "https://practica1-grupo9-imagenes.s3.us-east-2.amazonaws.com/";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -25,6 +26,7 @@ function Profile() {
         const data = await res.json();
         if (res.ok) {
           setUser(data);
+          console.log(data)
         } else {
           toast.error(data.error || "Error al cargar el perfil");
         }
@@ -97,7 +99,7 @@ function Profile() {
         {/* Información del usuario */}
         <div className="flex flex-col md:flex-row items-center md:items-start bg-white rounded-xl shadow p-6 mb-8 max-w-4xl mx-auto">
           <img
-            src={user.foto.startsWith("http") ? user.foto : `/uploads/${user.foto}`}
+            src={user.foto}
             alt="Perfil"
             className="w-32 h-32 rounded-full mr-6 object-cover mb-4 md:mb-0"
           />
@@ -140,14 +142,14 @@ function Profile() {
             user.obras.map((obra) => (
               <div key={obra.id} className="bg-white rounded-2xl shadow-md p-4 w-64 flex flex-col items-center">
                 <img
-                  src={obra.imagen.startsWith("http") ? obra.imagen : `/uploads/${obra.imagen}`}
+                  src={url_bucket + obra.imagen}
                   alt={obra.titulo}
                   className="w-full h-40 object-cover rounded mb-3"
                 />
                 <h4 className="font-semibold text-center text-blue-800">{obra.titulo}</h4>
                 <p className="text-gray-600 text-center">Autor: {obra.autor}</p>
-                <p className="text-gray-600 text-center">Fecha: {obra.fecha_adquisicion}</p>
-                <p className="text-gray-600 text-center">Precio: ${obra.precio.toFixed(2)}</p>
+                <p className="text-gray-600 text-center">Fecha: {new Date(obra.fecha_adquisicion).toLocaleDateString("es-ES")}</p>
+                <p className="text-gray-600 text-center">Precio: ${Number(obra.precio).toFixed(2)}</p>
               </div>
             ))
           ) : (

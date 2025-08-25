@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Select from "react-select";
 
 function Dashboard() {
+  const url_bucket = "https://practica1-grupo9-imagenes.s3.us-east-2.amazonaws.com/"
   const navigate = useNavigate();
   const [obras, setObras] = useState([]);
   const [authors, setAuthors] = useState([]);
@@ -407,9 +408,7 @@ function Dashboard() {
                 >
                   <img
                     src={
-                      obra.imagen && obra.imagen.startsWith("http")
-                        ? obra.imagen
-                        : `/uploads/${obra.imagen}`
+                      url_bucket + obra.imagen
                     }
                     alt={obra.titulo}
                     className="w-full h-48 object-cover rounded-xl"

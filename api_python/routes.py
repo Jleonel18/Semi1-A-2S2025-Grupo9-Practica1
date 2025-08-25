@@ -110,6 +110,7 @@ def obtener_perfil(current_user):
                 "autor": autor.nombre if autor else "",
                 "publicacion": obra.anio_publicacion.strftime("%Y-%m-%d"),
                 "precio": float(obra.precio),
+                "imagen": obra.imagen,
                 "fecha_adquisicion": aq.fecha_adquisicion.strftime("%Y-%m-%d")
             })
 
