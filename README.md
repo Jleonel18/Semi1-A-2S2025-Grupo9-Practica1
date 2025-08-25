@@ -88,7 +88,7 @@ Se configuraron diferentes usuarios de **AWS IAM** con roles y permisos específ
 
 5. **Usuario: `adminRDS`**
 
-   - **Rol:** Administrador de la base de datos para la pagina web pagina web
+   - **Rol:** Administrador de la base de datos para la pagina web.
    - **Política:**
 
      - `AmazonRDSFullAccess`: Permite la creación, configuración, administración y eliminación de instancias de base de datos en Amazon RDS, incluyendo clústeres de Aurora.
