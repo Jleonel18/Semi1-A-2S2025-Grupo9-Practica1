@@ -39,20 +39,7 @@ El siguiente diagrama describe la arquitectura:
 
 Se configuraron diferentes usuarios de **AWS IAM** con roles y permisos específicos:
 
-1. **Usuario: `Administrador_202200066`**
-
-   - **Rol:** Administrador de los servicios EC2, S3 e IAN
-   - **Política:**
-
-     - `AmazonEC2FullAccess`: Permite crear, modificar, iniciar, detener y eliminar instancias EC2, además de gestionar volúmenes, snapshots, y redes asociadas a EC2.
-
-     - `AmazonS3FullAccess`: Permite crear, modificar y eliminar buckets en S3, así como administrar objetos y configuraciones.
-
-     - `IAMFullAccess`: Permite crear y administrar usuarios, grupos, roles y políticas de IAM, incluyendo la asignación de permisos.
-
-   - **Descripción:** Acceso completo a los servicios EC2, S3 y IAM para un buen control del proyecto.
-
-2. **Usuario: `admin_ec2`**
+1. **Usuario: `admin_ec2`**
 
    - **Rol:** Administrador de instancias EC2
    - **Política:**
@@ -64,7 +51,7 @@ Se configuraron diferentes usuarios de **AWS IAM** con roles y permisos específ
    - **Descripción:**
      Este usuario tiene privilegios administrativos completos sobre los servicios de **EC2** y sobre la gestión de **IAM**. Se utiliza principalmente para la administración de servidores y tambien para lo que es el balanceador de carga, Elastic Load Balancer (ELB).
 
-3. **Usuario: `admin-s3-frontend`**
+2. **Usuario: `admin-s3-frontend`**
 
    - **Rol:** Administrador del bucket de la pagina web
    - **Política:**
@@ -76,7 +63,7 @@ Se configuraron diferentes usuarios de **AWS IAM** con roles y permisos específ
    - **Descripción:**
      Este usuario tiene privilegios administrativos completos sobre el servicio de **S3**. Se utiliza principalmente para la administración del bucket practica1-g9-paginaweb-2s2025 que contiene la pagina web estatica.
 
-4. **Usuario: `Admin_S3`**
+3. **Usuario: `Admin_S3`**
 
    - **Rol:** Administrador del bucket para guardar imagenes.
    - **Política:**
@@ -86,7 +73,7 @@ Se configuraron diferentes usuarios de **AWS IAM** con roles y permisos específ
    - **Descripción:**
      Este usuario tiene privilegios administrativos completos sobre el servicio de **S3**. Se utiliza principalmente para la administración del bucket practica1-grupo9-imagenes que contiene las imagenes utilizadas en la pagina web.
 
-5. **Usuario: `adminRDS`**
+4. **Usuario: `adminRDS`**
 
    - **Rol:** Administrador de la base de datos para la pagina web.
    - **Política:**
