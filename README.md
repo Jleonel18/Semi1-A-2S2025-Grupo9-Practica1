@@ -46,10 +46,8 @@ Se configuraron diferentes usuarios de **AWS IAM** con roles y permisos específ
 
      - `AmazonEC2FullAccess`: Permite crear, modificar, iniciar, detener y eliminar instancias EC2, además de gestionar volúmenes, snapshots, y redes asociadas a EC2.
 
-     - `IAMFullAccess`: Permite crear y administrar usuarios, grupos, roles y políticas de IAM, incluyendo la asignación de permisos.
-
    - **Descripción:**
-     Este usuario tiene privilegios administrativos completos sobre los servicios de **EC2** y sobre la gestión de **IAM**. Se utiliza principalmente para la administración de servidores y tambien para lo que es el balanceador de carga, Elastic Load Balancer (ELB).
+     Este usuario tiene privilegios administrativos completos sobre los servicios de **EC2**. Se utiliza principalmente para la administración de servidores y tambien para lo que es el balanceador de carga, Elastic Load Balancer (ELB).
 
 2. **Usuario: `admin-s3-frontend`**
 
