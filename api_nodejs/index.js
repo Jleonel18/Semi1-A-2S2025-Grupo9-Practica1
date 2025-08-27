@@ -91,7 +91,7 @@ app.post('/api/register', async (req, res) => {
         await s3.upload({ Bucket: process.env.AWS_BUCKET_NAME, Key: key, Body: buffer, ContentType: 'image/jpeg' }).promise();
 
         await pool.query(
-            'INSERT INTO Usuario (Usuario, Nombre, Contrasena, Foto) VALUES ($1, $2, $3, $4)',
+            'INSERT INTO Usuario (Usuario, Nombre, Contrasena, Foto, Saldo) VALUES ($1, $2, $3, $4, 0)',
             [Usuario, Nombre, ContrasenaHash, key]
         );
 
