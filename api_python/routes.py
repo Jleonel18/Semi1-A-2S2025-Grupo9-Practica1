@@ -15,6 +15,10 @@ BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
 
 routes = Blueprint("routes", __name__)
 
+@routes.route("/health")
+def health():
+    return "OK", 200
+
 
 @routes.route("/register", methods=["POST"])
 def register():
