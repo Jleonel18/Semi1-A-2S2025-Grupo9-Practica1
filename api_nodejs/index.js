@@ -279,10 +279,10 @@ app.post('/api/art/create', verifyToken, async (req, res) => {
 
         // Inserta la obra en la DB
         const obraResult = await pool.query(
-            'INSERT INTO Obra (Titulo, Id_Autor, Anio_Publicacion, Precio, Imagen, Id_Usuario) VALUES ($1, $2, $3, $4, $5, $6) RETURNING Id_Obra',
+            'INSERT INTO Obra (Titulo, Id_Autor, Anio_Publicacion, Precio, Imagen, Id_Usuario, disponibilidad) VALUES ($1, $2, $3, $4, $5, $6) RETURNING Id_Obra',
             [Titulo, Id_Autor, Anio_Publicacion, Precio, ImagenRuta, userId]
         );
-
+        
         const obraId = obraResult.rows[0].Id_Obra;
 
         res.status(201).json({ 
