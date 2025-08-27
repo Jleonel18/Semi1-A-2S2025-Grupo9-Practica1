@@ -175,6 +175,7 @@ def crear_obra(current_user):
         nueva_obra = Obra(
             titulo=titulo,
             id_autor=int(id_autor),
+            disponibilidad=True,
             anio_publicacion=dt.strptime(anio_publicacion, "%Y-%m-%d").date(),
             precio=Decimal(precio),
             imagen=filename,
