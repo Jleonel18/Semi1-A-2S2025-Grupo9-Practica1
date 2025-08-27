@@ -429,7 +429,8 @@ app.get('/api/gallery', verifyToken, async (req, res) => {
             obra.id_usuario
          FROM obra
          JOIN autor ON obra.id_autor = autor.id_autor
-         JOIN usuario ON obra.id_usuario = usuario.id_usuario`
+         JOIN usuario ON obra.id_usuario = usuario.id_usuario
+         WHERE Obra.Disponibilidad = TRUE`
       );
   
       const obras = obrasResult.rows.map((obra) => ({
