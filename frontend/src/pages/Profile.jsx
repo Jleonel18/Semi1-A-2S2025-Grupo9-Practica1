@@ -20,7 +20,7 @@ function Profile() {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/user", {
+        const res = await fetch("http://0/api/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -50,7 +50,7 @@ function Profile() {
     if (!amount || parseFloat(amount) <= 0) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/user/balance", {
+      const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/user/balance", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ monto: amount }),

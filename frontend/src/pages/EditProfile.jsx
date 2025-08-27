@@ -35,7 +35,7 @@ function EditProfile() {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/user", {
+        const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -83,7 +83,7 @@ function EditProfile() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/profile", {
+      const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/profile", {
         method: "PUT", // El backend espera PUT
         headers: {
           Authorization: `Bearer ${token}`,

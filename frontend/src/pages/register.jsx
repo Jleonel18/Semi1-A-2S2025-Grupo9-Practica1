@@ -57,7 +57,7 @@ function Register() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
+      const response = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

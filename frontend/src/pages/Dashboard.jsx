@@ -71,8 +71,8 @@ function Dashboard() {
       try {
         const endpoint =
           view === "all"
-            ? "http://localhost:5000/api/gallery"
-            : "http://localhost:5000/api/my-art";
+            ? "http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/gallery"
+            : "http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/my-art";
 
         const res = await fetch(endpoint, {
           method: "GET",
@@ -115,7 +115,7 @@ function Dashboard() {
       const fetchAuthors = async () => {
         const token = localStorage.getItem("token");
         try {
-          const res = await fetch("http://localhost:5000/api/authors", {
+          const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/authors", {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -157,7 +157,7 @@ function Dashboard() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/art/purchase/${id_obra}`,
+        `http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/art/purchase/${id_obra}`,
         {
           method: "POST",
           headers: {
@@ -252,7 +252,7 @@ function Dashboard() {
 
     try {
       console.log("📌 Form data before submission:", formData);
-      const res = await fetch("http://localhost:5000/api/art/create", {
+      const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/art/create", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -276,7 +276,7 @@ function Dashboard() {
           Imagen: "",
         });
         if (view === "my") {
-          const res = await fetch("http://localhost:5000/api/my-art", {
+          const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/my-art", {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
