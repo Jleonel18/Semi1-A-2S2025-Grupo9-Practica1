@@ -20,7 +20,7 @@ function Profile() {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://0/api/user", {
+        const res = await fetch("http://BalanceadorSemisG9-1373300024.us-east-2.elb.amazonaws.com/api/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
