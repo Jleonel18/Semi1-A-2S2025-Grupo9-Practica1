@@ -342,6 +342,8 @@ def editar_perfil(current_user):
         if nuevo_nombre:
             current_user.nombre = nuevo_nombre
 
+        foto_url = current_user.foto
+
         # Cambiar foto si se envió
         if nueva_foto_base64:
             filename = f"Fotos_Perfil/{current_user.usuario}_perfil.jpg"
