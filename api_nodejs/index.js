@@ -68,6 +68,11 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+app.get("/api/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+
 // ===== Endpoint para REGISTRO (/register) =====
 app.post('/api/register', async (req, res) => {
     const { Usuario, Nombre, Contrasena, Foto } = req.body;
